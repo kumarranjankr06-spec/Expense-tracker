@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Expense</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+        }
+
+        .expense-container {
+            width: 100%;
+            max-width: 480px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            font-size: 26px;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+            color: #1e293b;
+            background: #ffffff;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        input[type="number"] {
+            font-size: 18px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .required {
+            color: #dc2626;
+        }
+
+        @media (max-width: 500px) {
+            .expense-container {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="expense-container">
+
+        <h1>Add Expense</h1>
+        <p class="subtitle">Record and manage your spending.</p>
+
+        <form action="#" method="post" id="expense">
+
+            <!-- Expense Amount -->
+            <div class="form-group">
+                <label for="amount">
+                    Expense Amount (₹) <span class="required">*</span>
+                </label>
+
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    placeholder="Enter amount"
+                    min="0.01"
+                    step="0.01"
+                    required
+                >
+            </div>
+
+            <!-- Expense Date and Time -->
+            <div class="form-group">
+                <label for="expense_time">Expense Date and Time</label>
+
+                <input
+                    type="date"
+                    id="expense_time"
+                    name="expense_time"
+                    required
+                >
+            </div>
+
+            <!-- Expense Category -->
+            <div class="form-group">
+                <label for="category">
+                    Category <span class="required">*</span>
+                </label>
+
+                <select id="category" name="category" required>
+                    <option value="" disabled selected>
+                        Select a category
+                    </option>
+                    <option value="Food">Food</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Ration">Ration / Groceries</option>
+                    <option value="Shopping">Shopping</option>
+                    <option value="Bills">Bills and Utilities</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Rent">Rent</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <!-- Expense Description -->
+            <div class="form-group">
+                <label for="description">Description</label>
+
+                <textarea
+                    id="description"
+                    name="description"
+                    placeholder="None"
+                >None</textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Add Expense
+            </button>
+
+
+        </form>
+        <p id="message" role="status"></p>
+    </div>
+
+    <script>
+      const form=document.getElementById("expense");
+      const message=document.getElementById("message");
+
+      form.addEventListener("submit",async function(event){
+        event.preventDefault();
+        const token=sessionStorage.getItem("access_token");
+        if(!token){
+            console.log("access tken have not been found here");
+        }
+        let expenseDate = document.getElementById("expense_time").value;
+
+// If the user does not select a date, use today's date
+if (!expenseDate) {
+    const today = new Date();
+    expenseDate =
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+}
+        const data={
+          amount:document.getElementById("amount").value,
+          desc:document.getElementById("description").value,
+          cat:document.getElementById("category").value,
+          time:expenseDate
+        }
+        const response=await fetch(
+          "http://127.0.0.1:8000/expense",{
+            method:'POST',
+            headers:{
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },body:JSON.stringify(data)
+            }
+        )
+
+        const poi=await response.json();
+        console.log("Status:", response.status);
+console.log("Full error:", JSON.stringify(poi.detail, null, 2));
+        if(response.ok){
+          message.style.color="green";
+          message.textContent=poi.message;
+          form.reset();
+        }
+        else{
+          message.style.color="red";
+          message.textContent=poi.detail;
+        }
+      })
+
+    </script>
+</body>
+</html>
